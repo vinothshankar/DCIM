@@ -1,0 +1,397 @@
+﻿@{
+    ViewData["Title"] = "MakePath Page";
+}
+
+    <form id="IndexForm">
+        <input type="color" id="favcolor" name="favcolor" value="#ff0000" disabled>
+        <label for="favcolor">List Of Ports</label>
+        <input type="color" id="favcolor" name="favcolor" value="#ffff80" disabled>
+        <label for="favcolor">Selected Port</label>
+        <input type="color" id="favcolor" name="favcolor" value="#0000ff" disabled>
+        <label for="favcolor">Connected Port</label>
+        <div style="width: 100%; display: table;">
+            <div style="display: table-row">
+                <div style="width: 600px; display: table-cell;">
+                    Source :
+                    <div class="col-md-6">
+                        <label>Rack</label>
+                        <select id="SRack" name="SRack" class="form-control" onchange="SRackChange()">
+                            <option value=""></option>
+                        </select>
+
+                    </div>
+                    <div class="col-md-6">
+                        <label>Server</label>
+                        <select id="SServer" name="SServer" class="form-control" onchange="SServerChange()">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Slot</label>
+                        <select id="SSlot" name="SSlot" class="form-control" onchange="SSlotChange()">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Port</label>
+                        <select id="SPort" name="SPort" class="form-control" onchange="SviewImage()">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <br />
+                    <div class="box">
+                        <button type="button" onclick="szoomin()">
+                            Zoom-In
+                        </button>
+
+                        <button type="button" onclick="szoomout()">
+                            Zoom-Out
+                        </button>
+                        <img src="" id="sImage" width="700" height="100" style="display:none" />
+                    </div>
+                </div>
+                <div style="display: table-cell;">
+                    Destination :
+                    <div class="col-md-6">
+                        <label>Rack</label>
+                        <select id="DRack" name="DRack" class="form-control" onchange="DRackChange()">
+                            <option value=""></option>
+                        </select>
+
+                    </div>
+                    <div class="col-md-6">
+                        <label>Server</label>
+                        <select id="DServer" name="DServer" class="form-control" onchange="DServerChange()">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Slot</label>
+                        <select id="DSlot" name="DSlot" class="form-control" onchange="DSlotChange()">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Port</label>
+                        <select id="DPort" name="DPort" class="form-control" onchange="DviewImage()">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <br />
+                    <div class="box">
+                        <button type="button" onclick="zoomin()">
+                            Zoom-In
+                        </button>
+
+                        <button type="button" onclick="zoomout()">
+                            Zoom-Out
+                        </button>
+                        <img src="" id="dImage" width="700" height="100" style="display:none" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <br />
+    </form>
+<div class="row">
+    <div class="col-md-12">
+        <div style="text-align:center">
+            <button class="btn btn-primary" id="MakePath">Make Path</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    var SRack = $('#SRack');
+    var SServer = $('#SServer');
+    var SSlot = $('#SSlot');
+    var SPort = $('#SPort');
+    var DRack = $('#DRack');
+    var DServer = $('#DServer');
+    var DSlot = $('#DSlot');
+    var DPort = $('#DPort');
+    $(document).ready(function () {
+
+        $('#MakePath').click(function () {
+            $.ajax({
+                url: "/MakePath/MakePath",
+                type: "POST",
+                data: $('#IndexForm').serializeArray(),
+                success: function (data) {
+                    if (data != "") {
+                        alert(data);
+                    } else {
+                        alert("Port Connected successfully");
+                    }
+                    window.location.reload();
+                },
+                error: function (data) {
+                    console.log(data);
+                }
+            });
+        })
+
+        $.ajax({
+            url: "/MakePath/GetRacks?type=S",
+            type: "GET",
+            success: function (data) {
+                SRack.empty();
+                SRack.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SRack.append(
+                        $('<option></option>').val(value['Id']).html(value['Rack1'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+
+        $.ajax({
+            url: "/MakePath/GetRacks?type=D",
+            type: "GET",
+            success: function (data) {
+                DRack.empty();
+                DRack.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    DRack.append(
+                        $('<option></option>').val(value['Id']).html(value['Rack1'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    })
+    function SRackChange() {
+        $.ajax({
+            url: '/MakePath/GetServers?type=S&&rackId=' + $('#SRack').val(),
+            type: "GET",
+            success: function (data) {
+                SServer.empty();
+                SServer.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SServer.append(
+                        $('<option></option>').val(value['Id']).html(value['Server1'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function DRackChange(selectValue = null) {
+        $.ajax({
+            url: '/MakePath/GetServers?type=D&&rackId=' + $('#DRack').val(),
+            type: "GET",
+            success: function (data) {
+                DServer.empty();
+                DServer.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    if (value['Id'] == selectValue) {
+                        DServer.append(
+                            $('<option selected="selected"></option>').val(value['Id']).html(value['Server1'])
+                        );
+                    } else {
+                        DServer.append(
+                            $('<option></option>').val(value['Id']).html(value['Server1'])
+                        );
+                    }
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function DServerChange(selectValue = null, ServerId = null) {
+        var val = $('#DServer').val() ? $('#DServer').val() : ServerId;
+        $.ajax({
+            url: '/MakePath/GetServerSlot?serverId=' + val,
+            type: "GET",
+            success: function (data) {
+                DSlot.empty();
+                DSlot.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    if (value['Id'] == selectValue) {
+                        DSlot.append(
+                            $('<option selected="selected"></option>').val(value['Id']).html(value['SlotName'])
+                        );
+                    } else {
+                        DSlot.append(
+                            $('<option></option>').val(value['Id']).html(value['SlotName'])
+                        );
+                    }
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function SServerChange() {
+        $.ajax({
+            url: '/MakePath/GetServerSlot?serverId=' + $('#SServer').val(),
+            type: "GET",
+            success: function (data) {
+                SSlot.empty();
+                SSlot.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SSlot.append(
+                        $('<option></option>').val(value['Id']).html(value['SlotName'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function DSlotChange(selectValue = null, slotId = null, serverId = null) {
+        var val = $('#DSlot').val() ? $('#DSlot').val() : slotId;
+        var serverVal = $('#DServer').val() ? $('#DServer').val() : serverId;
+        $.ajax({
+            url: '/MakePath/GetServerPorts?serverId=' + serverVal + "&&slotId=" + val,
+            type: "GET",
+            success: function (data) {
+                DPort.empty();
+                DPort.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    if (value['Id'] == selectValue) {
+                        DPort.append(
+                            $('<option selected="selected"></option>').val(value['Id']).html(value['Port'])
+                        );
+                    } else {
+                        DPort.append(
+                            $('<option></option>').val(value['Id']).html(value['Port'])
+                        );
+                    }
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function SSlotChange() {
+        $.ajax({
+            url: '/MakePath/GetServerPorts?serverId=' + $('#SServer').val() + "&&slotId=" + $('#SSlot').val(),
+            type: "GET",
+            success: function (data) {
+                SPort.empty();
+                SPort.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SPort.append(
+                        $('<option></option>').val(value['Id']).html(value['Port'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function SviewImage() {
+
+        $.ajax({
+            url: "/MakePath/GetDestinationIds?portId=" + $('#SPort').val(),
+            type: "GET",
+            success: function (data) {
+                DRack.val(data['DRackId']).attr("selected", "selected");
+                DRackChange(data['DServerId']);
+                DServerChange(data['DSlotId'], data['DServerId']);
+                DSlotChange(data['DPortId'], data['DSlotId'], data['DServerId']);
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+
+        $.ajax({
+            url: "/MakePath/GetServerSPortImage",
+            type: "POST",
+            data: $('#IndexForm').serializeArray(),
+            success: function (data) {
+                if (data != "") {
+                    $('#sImage').css('display', 'block');
+                    $('#sImage').attr("src", "data:image/Png;base64," + data + "");
+                } else {
+                    $('#sImage').css('display', 'none');
+                }
+                DviewImage();
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+
+    }
+    function DviewImage() {
+        $.ajax({
+            url: "/MakePath/GetServerDPortImage",
+            type: "POST",
+            data: $('#IndexForm').serializeArray(),
+            success: function (data) {
+                if (data != "") {
+                    $('#dImage').css('display', 'block');
+                    $('#dImage').attr("src", "data:image/Png;base64," + data + "");
+                } else {
+                    $('#dImage').css('display', 'none');
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function zoomin() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 30) + "px";
+        GFG.style.width = (currWidth + 100) + "px";
+    }
+    function zoomout() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 30) + "px";
+        GFG.style.width = (currWidth - 100) + "px";
+    }
+    function szoomin() {
+        var GFG = document.getElementById("sImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 30) + "px";
+        GFG.style.width = (currWidth + 100) + "px";
+    }
+    function szoomout() {
+        var GFG = document.getElementById("sImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 30) + "px";
+        GFG.style.width = (currWidth - 100) + "px";
+    }
+</script>

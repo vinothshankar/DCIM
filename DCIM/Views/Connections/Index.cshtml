@@ -1,0 +1,48 @@
+﻿@model List<ConnectionList>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Source Rack</th>
+            <th>Destination Rack</th>
+            <th>Source Server</th>
+            <th>Destination Server</th>
+            <th>Source Slot</th>
+            <th>Destination Slot</th>
+            <th>Source Port</th>
+            <th>Destination Port</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var data in Model)
+        {
+            <tr>
+                <td>@data.SRack</td>
+                <td>@data.DRack</td>
+                <td>@data.SServer</td>
+                <td>@data.DServer</td>
+                <td>@data.DSlot</td>
+                <td>@data.SSlot</td>
+                <td>@data.SPort</td>
+                <td>@data.DPort</td>
+                <td><a class="btn btn-info" onclick="disconnect(@JsonConvert.SerializeObject(data))">Disconnect</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+<script>
+    function disconnect(data) {
+        $.ajax({
+            url: "/Connections/DisconnectPath",
+            type: "POST",
+            data: data,
+            success: function (data) {
+                window.location.reload();
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+</script>

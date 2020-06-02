@@ -1,0 +1,269 @@
+﻿@{
+    ViewData["Title"] = "Rack Server Map";
+}
+
+<form id="IndexForm">
+    <div style="width: 100%; display: table;">
+        <div style="display: table-row">
+            <div style="width: 600px; display: table-cell;">
+                Source :
+                <div class="col-md-6">
+                    <label>Rack</label>
+                    <select id="Rack" name="Rack" class="form-control" onchange="RackChange()">
+                        <option value=""></option>
+                    </select>
+
+                </div>
+                <div class="col-md-6">
+                    <label>Rack Unit</label>
+                    <select id="RackUnit" name="RackUnit" class="form-control" onchange="RackUnitChange()">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <br />
+                <div class="box">
+                    <button type="button" onclick="szoomin()">
+                        Zoom-In
+                    </button>
+
+                    <button type="button" onclick="szoomout()">
+                        Zoom-Out
+                    </button>
+                    <img src="" id="sImage" width="700" height="1000" style="display:none" />
+                </div>
+            </div>
+            <div style="display: table-cell;">
+                Select Server :
+
+                <div class="col-md-6">
+                    <label>Server</label>
+                    <select id="Server" name="Server" class="form-control" onchange="ServerChange()">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <br />
+                <div class="box">
+                    <button type="button" onclick="rzoomin()">
+                        Zoom-In
+                    </button>
+
+                    <button type="button" onclick="rzoomout()">
+                        Zoom-Out
+                    </button>
+                    <br />
+                    <img src="" id="rImage" width="700" height="100" style="display:none" />
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <br />
+</form>
+
+<div class="row">
+    <div class="col-md-12">
+        <div style="text-align:center">
+            <button class="btn btn-primary" id="PlaceServer">Map Server</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    var Rack = $('#Rack');
+    var RackUnit = $('#RackUnit');
+    var Server = $('#Server');
+    $(document).ready(function () {
+
+        $('#PlaceServer').click(function () {
+            $.ajax({
+                url: "/RackServerMap/MapServerToRack",
+                type: "POST",
+                data: $('#IndexForm').serializeArray(),
+                success: function (data) {
+                    if (data != "") {
+                        $('#dImage').css('display', 'block');
+                        $('#dImage').attr("width", "700");
+                        $('#dImage').attr("src", "data:image/Png;base64," + data + "");
+                    } else {
+                        $('#dImage').css('display', 'none');
+                    }
+                    alert("Server Mapped successfully");
+                    window.location.reload();
+                },
+                error: function (data) {
+                    console.log(data);
+                }
+            });
+        })
+        $.ajax({
+            url: '/RackServerMap/GetNotMappedServer',
+            type: "GET",
+            success: function (data) {
+                Server.empty();
+                Server.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    Server.append(
+                        $('<option></option>').val(value['Id']).html(value['Server1'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+        $.ajax({
+            url: "/MakePath/GetRacks?type=S",
+            type: "GET",
+            success: function (data) {
+                Rack.empty();
+                Rack.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    Rack.append(
+                        $('<option></option>').val(value['Id']).html(value['Rack1'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+
+    })
+
+    function RackChange() {
+        $.ajax({
+            url: '/RackServerMap/GetRackUnit?rackId=' + $('#Rack').val(),
+            type: "GET",
+            success: function (data) {
+                RackUnit.empty();
+                RackUnit.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    RackUnit.append(
+                        $('<option></option>').val(value['Id']).html(value['FromUnit'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+        $.ajax({
+            url: "/RackServerMap/GetRackImage?rackId="+ $('#Rack').val(),
+            type: "GET",
+            success: function (data) {
+                if (data != "") {
+                    $('#sImage').css('display', 'block');
+                    $('#sImage').attr("src", "data:image/Png;base64," + data + "");
+                } else {
+                    $('#sImage').css('display', 'none');
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function RackUnitChange() {
+        $.ajax({
+            url: "/RackServerMap/GetRackUnitImage",
+            type: "POST",
+            data: $('#IndexForm').serializeArray(),
+            success: function (data) {
+                if (data != "") {
+                    $('#sImage').css('display', 'block');
+                    $('#sImage').attr("src", "data:image/Png;base64," + data + "");
+                } else {
+                    $('#sImage').css('display', 'none');
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function ServerChange() {
+        $.ajax({
+            url: '/RackServerMap/GetNotMappedServerImage',
+            type: "POST",
+            data: $('#IndexForm').serializeArray(),
+            success: function (data) {
+                if (data != "") {
+                    $('#rImage').css('display', 'block');
+                    $('#rImage').attr("src", "data:image/Png;base64," + data + "");
+                } else {
+                    $('#rImage').css('display', 'none');
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+
+
+  
+    function zoomin() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 100) + "px";
+        GFG.style.width = (currWidth + 20) + "px";
+    }
+    function zoomout() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 100) + "px";
+        GFG.style.width = (currWidth - 20) + "px";
+    }
+    function szoomin() {
+        var GFG = document.getElementById("sImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 100) + "px";
+        GFG.style.width = (currWidth + 20) + "px";
+    }
+    function szoomout() {
+        var GFG = document.getElementById("sImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 100) + "px";
+        GFG.style.width = (currWidth - 20) + "px";
+    }
+    function rzoomin() {
+        var GFG = document.getElementById("rImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 30) + "px";
+        GFG.style.width = (currWidth + 100) + "px";
+    }
+    function rzoomout() {
+        var GFG = document.getElementById("rImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 30) + "px";
+        GFG.style.width = (currWidth - 100) + "px";
+    }
+    function dzoomin() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 30) + "px";
+        GFG.style.width = (currWidth + 100) + "px";
+    }
+    function dzoomout() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 30) + "px";
+        GFG.style.width = (currWidth - 100) + "px";
+    }
+</script>

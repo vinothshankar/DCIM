@@ -1,0 +1,297 @@
+﻿@{
+    ViewData["Title"] = "Replace Ports";
+}
+
+<form id="IndexForm">
+    <input type="color" id="favcolor" name="favcolor" value="#ff0000" disabled>
+    <label for="favcolor">List Of Ports</label>
+    <input type="color" id="favcolor" name="favcolor" value="#ffff80" disabled>
+    <label for="favcolor">Selected Port</label>
+    <div style="width: 100%; display: table;">
+        <div style="display: table-row">
+            <div style="width: 600px; display: table-cell;">
+                Source :
+                <div class="col-md-6">
+                    <label>Rack</label>
+                    <select id="SRack" name="SRack" class="form-control" onchange="SRackChange()">
+                        <option value=""></option>
+                    </select>
+
+                </div>
+                <div class="col-md-6">
+                    <label>Server</label>
+                    <select id="SServer" name="SServer" class="form-control" onchange="SServerChange()">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label>Slot</label>
+                    <select id="SSlot" name="SSlot" class="form-control" onchange="SSlotChange()">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label>Port</label>
+                    <select id="SPort" name="SPort" class="form-control" onchange="SviewImage()">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <br />
+                <div class="box">
+                    <button type="button" onclick="szoomin()">
+                        Zoom-In
+                    </button>
+
+                    <button type="button" onclick="szoomout()">
+                        Zoom-Out
+                    </button>
+                    <img src="" id="sImage" width="700" height="100" style="display:none" />
+                </div>
+            </div>
+            <div style="display: table-cell;">
+                Select Port To Change :
+
+                <div class="col-md-6">
+                    <label>Port</label>
+                    <select id="DPort" name="DPort" class="form-control" onchange="PortViewImage()">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <br />
+                <div class="box">
+                    <button type="button" onclick="rzoomin()">
+                        Zoom-In
+                    </button>
+
+                    <button type="button" onclick="rzoomout()">
+                        Zoom-Out
+                    </button>
+                    <br />
+                    <img src="" id="rImage" width="200" height="100" style="display:none" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <br />
+</form>
+<div class="row">
+    <div class="col-md-12">
+        <div style="text-align:center">
+            <button class="btn btn-primary" id="ReplacePorts">Replace Ports</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    var SRack = $('#SRack');
+    var SServer = $('#SServer');
+    var SSlot = $('#SSlot');
+    var SPort = $('#SPort');
+    var DPort = $('#DPort');
+    $(document).ready(function () {
+
+        $('#ReplacePorts').click(function () {
+            $.ajax({
+                url: "/PortReplace/MakePortReplace",
+                type: "POST",
+                data: $('#IndexForm').serializeArray(),
+                success: function (data) {
+                    if (data != "") {
+                        $('#rImage').css('display', 'block');
+                        $('#rImage').attr("width", "700");
+                        $('#rImage').attr("src", "data:image/Png;base64," + data + "");
+                    } else {
+                        $('#rImage').css('display', 'none');
+                    }
+                    alert("Port replaced successfully");
+                    window.location.reload();
+                },
+                error: function (data) {
+                    console.log(data);
+                }
+            });
+        })
+        $.ajax({
+            url: '/PortReplace/GetPortMaster',
+            type: "GET",
+            success: function (data) {
+                DPort.empty();
+                DPort.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    DPort.append(
+                        $('<option></option>').val(value['Id']).html(value['PortName'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+        $.ajax({
+            url: "/MakePath/GetRacks?type=S",
+            type: "GET",
+            success: function (data) {
+                SRack.empty();
+                SRack.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SRack.append(
+                        $('<option></option>').val(value['Id']).html(value['Rack1'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+
+    })
+    function SServerChange() {
+        $.ajax({
+            url: '/MakePath/GetServerSlot?serverId=' + $('#SServer').val(),
+            type: "GET",
+            success: function (data) {
+                SSlot.empty();
+                SSlot.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SSlot.append(
+                        $('<option></option>').val(value['Id']).html(value['SlotName'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function SSlotChange() {
+        $.ajax({
+            url: '/MakePath/GetServerPorts?serverId=' + $('#SServer').val() + "&&slotId=" + $('#SSlot').val(),
+            type: "GET",
+            success: function (data) {
+                SPort.empty();
+                SPort.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SPort.append(
+                        $('<option></option>').val(value['Id']).html(value['Port'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function SRackChange() {
+        $.ajax({
+            url: '/MakePath/GetServers?type=S&&rackId=' + $('#SRack').val(),
+            type: "GET",
+            success: function (data) {
+                SServer.empty();
+                SServer.append(
+                    $('<option></option>')
+                );
+                $.each(data, function (index, value) {
+                    SServer.append(
+                        $('<option></option>').val(value['Id']).html(value['Server1'])
+                    );
+                });
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+
+
+
+    function SviewImage() {
+        $.ajax({
+            url: "/PortReplace/ServerPortView",
+            type: "POST",
+            data: $('#IndexForm').serializeArray(),
+            success: function (data) {
+                if (data != "") {
+                    $('#sImage').css('display', 'block');
+                    $('#sImage').attr("src", "data:image/Png;base64," + data + "");
+                } else {
+                    $('#sImage').css('display', 'none');
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+
+    }
+    function PortViewImage() {
+        $.ajax({
+            url: "/PortReplace/GetReplacePortImage",
+            type: "POST",
+            data: $('#IndexForm').serializeArray(),
+            success: function (data) {
+                if (data != "") {
+                    $('#rImage').css('display', 'block');
+                    $('#rImage').attr("width", "200");
+                    $('#rImage').attr("src", "data:image/Png;base64," + data + "");
+                } else {
+                    $('#rImage').css('display', 'none');
+                }
+            },
+            error: function (data) {
+                console.log(data);
+            }
+        });
+    }
+    function zoomin() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 30) + "px";
+        GFG.style.width = (currWidth + 100) + "px";
+    }
+    function zoomout() {
+        var GFG = document.getElementById("dImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 30) + "px";
+        GFG.style.width = (currWidth - 100) + "px";
+    }
+    function szoomin() {
+        var GFG = document.getElementById("sImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 30) + "px";
+        GFG.style.width = (currWidth + 100) + "px";
+    }
+    function szoomout() {
+        var GFG = document.getElementById("sImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 30) + "px";
+        GFG.style.width = (currWidth - 100) + "px";
+    }
+    function rzoomin() {
+        var GFG = document.getElementById("rImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight + 30) + "px";
+        GFG.style.width = (currWidth + 100) + "px";
+    }
+    function rzoomout() {
+        var GFG = document.getElementById("rImage");
+        var currHeight = GFG.clientHeight;
+        var currWidth = GFG.clientWidth;
+        GFG.style.height = (currHeight - 30) + "px";
+        GFG.style.width = (currWidth - 100) + "px";
+    }
+</script>
